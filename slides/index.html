@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inside Agentic Coding</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --r-background-color: #0c0c0e;
+  --r-main-font: 'Noto Sans SC', sans-serif;
+  --r-heading-font: 'Noto Sans SC', sans-serif;
+  --r-code-font: 'JetBrains Mono', monospace;
+  --r-main-font-size: 32px;
+  --r-heading-color: #e8e4de;
+  --r-main-color: #a8a29e;
+  --r-link-color: #d4a574;
+  --amber: #d4a574;
+  --green: #7ec699;
+  --blue: #6cb6ff;
+  --red: #f47067;
+  --yellow: #e0c46c;
+  --gray: #6e6a62;
+  --dim: #44403c;
+}
+
+.reveal {
+  font-weight: 300;
+}
+
+.reveal h1, .reveal h2, .reveal h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.reveal h1 {
+  font-size: 2.4em;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.reveal h2 {
+  font-size: 1.6em;
+  margin-bottom: 0.6em;
+}
+
+.reveal h3 {
+  font-size: 1.1em;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.reveal code {
+  font-family: var(--r-code-font);
+}
+
+.reveal pre {
+  width: 100%;
+  font-size: 0.52em;
+  box-shadow: none;
+  border: 1px solid #1c1917;
+  border-radius: 6px;
+  background: #12100e;
+}
+
+.reveal pre code {
+  padding: 1.2em 1.4em;
+  line-height: 1.5;
+  max-height: 520px;
+}
+
+.reveal .code-inline {
+  font-family: var(--r-code-font);
+  color: var(--amber);
+  font-size: 0.9em;
+  background: #1c1917;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+}
+
+/* Part divider slides */
+.reveal .part-slide h2 {
+  font-size: 1.2em;
+  color: var(--gray);
+  font-weight: 400;
+  margin-bottom: 0.3em;
+}
+.reveal .part-slide h1 {
+  font-size: 2.8em;
+  background: linear-gradient(135deg, #e8e4de 0%, var(--amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Terminal simulation */
+.terminal {
+  background: #12100e;
+  border: 1px solid #292524;
+  border-radius: 8px;
+  padding: 1.2em 1.6em;
+  text-align: left;
+  font-family: var(--r-code-font);
+  font-size: 0.52em;
+  line-height: 1.7;
+  max-width: 90%;
+  margin: 0 auto;
+}
+.terminal .t-gray { color: #78716c; }
+.terminal .t-blue { color: var(--blue); }
+.terminal .t-yellow { color: var(--yellow); }
+.terminal .t-green { color: var(--green); }
+.terminal .t-red { color: var(--red); }
+.terminal .t-white { color: #e8e4de; }
+.terminal .t-dim { color: #57534e; }
+.terminal .t-prompt { color: var(--amber); }
+.terminal .t-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--amber);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  font-family: var(--r-code-font);
+  font-size: 0.65em;
+  flex-wrap: wrap;
+}
+.flow-box {
+  background: #1c1917;
+  border: 1px solid #292524;
+  border-radius: 6px;
+  padding: 0.6em 1em;
+  color: #e8e4de;
+}
+.flow-box.active {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.flow-arrow {
+  color: var(--dim);
+  font-size: 1.2em;
+}
+.flow-loop {
+  color: var(--green);
+  font-size: 0.8em;
+  margin-top: 0.3em;
+}
+
+/* Comparison table */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6em;
+  text-align: left;
+  font-size: 0.7em;
+  max-width: 90%;
+  margin: 0 auto;
+}
+.compare-col h3 {
+  margin-bottom: 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #292524;
+}
+.compare-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.compare-col li {
+  padding: 0.25em 0;
+  color: var(--r-main-color);
+}
+.compare-col li::before {
+  content: "→ ";
+  color: var(--dim);
+}
+
+/* File label */
+.file-label {
+  font-family: var(--r-code-font);
+  font-size: 0.5em;
+  color: var(--gray);
+  background: #1c1917;
+  display: inline-block;
+  padding: 0.2em 0.8em;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Key insight callout */
+.insight {
+  border-left: 3px solid var(--amber);
+  padding: 0.5em 1em;
+  margin: 0.8em auto;
+  text-align: left;
+  max-width: 80%;
+  font-size: 0.8em;
+  color: #e8e4de;
+}
+
+/* Stagger animation */
+.reveal .slides section .fragment.step-in {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.reveal .slides section .fragment.step-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Slide number */
+.reveal .slide-number {
+  font-family: var(--r-code-font);
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* Subtle line decoration */
+.line-accent {
+  width: 40px;
+  height: 2px;
+  background: var(--amber);
+  margin: 0.6em auto;
+}
+
+/* Tag badges */
+.tag {
+  display: inline-block;
+  font-family: var(--r-code-font);
+  font-size: 0.55em;
+  padding: 0.15em 0.6em;
+  border-radius: 3px;
+  margin: 0.1em;
+}
+.tag-green { background: #1a2e1a; color: var(--green); }
+.tag-blue { background: #15202e; color: var(--blue); }
+.tag-yellow { background: #2e2a15; color: var(--yellow); }
+.tag-red { background: #2e1515; color: var(--red); }
+.tag-gray { background: #1c1917; color: var(--gray); }
+
+/* slide specific */
+.reveal .title-sub {
+  font-size: 0.55em;
+  color: var(--gray);
+  font-weight: 300;
+  margin-top: 0.3em;
+}
+
+.reveal .big-number {
+  font-size: 4em;
+  font-weight: 900;
+  color: var(--amber);
+  line-height: 1;
+  font-family: var(--r-code-font);
+}
+
+.reveal ul.clean {
+  list-style: none;
+  padding: 0;
+}
+.reveal ul.clean li {
+  padding: 0.2em 0;
+}
+.reveal ul.clean li::before {
+  content: "· ";
+  color: var(--dim);
+}
+
+.reveal .qa-slide h1 {
+  font-size: 3.5em;
+  color: var(--amber);
+}
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================ -->
+<!-- TITLE -->
+<!-- ============================================ -->
+<section>
+  <h1>Inside Agentic Coding</h1>
+  <div class="line-accent"></div>
+  <p class="title-sub">Reproducing Claude Code's core flow in 900 lines</p>
+  <br>
+  <p style="font-size:0.5em; color:var(--dim);">github.com/polunzh/pocket-code</p>
+</section>
+
+<section>
+  <h2>Something You Use Every Day</h2>
+  <br>
+  <div class="terminal" style="font-size:0.6em;">
+    <span class="t-prompt">$</span> <span class="t-white">claude "fix this bug"</span><br><br>
+    <span class="t-dim">Claude read 5 files</span><br>
+    <span class="t-dim">Claude edited 2 files</span><br>
+    <span class="t-dim">Claude ran the tests</span><br>
+    <span class="t-dim">Claude confirmed tests pass</span><br><br>
+    <span class="t-green">✓ Bug fixed</span>
+  </div>
+  <br>
+  <p class="fragment step-in" style="font-size:0.75em; color:var(--amber);">What actually happens in between?</p>
+</section>
+
+<section>
+  <h2>Goal for Today</h2>
+  <br>
+  <p style="font-size:0.85em; color:#e8e4de;">Walk through the core flow of an agentic coding tool<br>and examine a minimal working implementation</p>
+  <br>
+  <p class="fragment step-in" style="font-size:0.65em; color:var(--gray);">Starting from running code, not slides full of abstractions.</p>
+</section>
+
+<!-- ============================================ -->
+<!-- PART 1: DEMO -->
+<!-- ============================================ -->
+<section class="part-slide">
+  <h2>Part 1</h2>
+  <h1>Live Demo</h1>
+</section>
+
+<section>
+  <h2>Pocket Code</h2>
+  <br>
+  <div class="terminal">
+    <span class="t-dim">Pocket Code — deepseek-chat @ https://api.deepseek.com</span><br>
+    <span class="t-dim">Type /help for commands, /exit to quit.</span><br><br>
+    <span class="t-prompt">&gt;</span> <span class="t-white">check bug.py and fix it</span><br><br>
+    <span class="t-gray">[thinking] Let me read the file first...</span><br>
+    <span class="t-blue">[tool] read_file({"path":"bug.py"})</span><br>
+    <span class="t-green">[result] def add(a, b): return a - b  # bug here</span><br><br>
+    <span class="t-gray">[thinking] Found it — subtraction instead of addition...</span><br>
+    <span class="t-blue">[tool] edit_file({"path":"bug.py","old_string":"a - b","new_string":"a + b"})</span><br>
+    <span class="t-yellow">[confirm] edit_file: bug.py (replace 5 chars) (y/n)</span> <span class="t-white">y</span><br>
+    <span class="t-green">[result] OK</span><br><br>
+    <span class="t-gray">[thinking] Fixed. Let me verify...</span><br>
+    <span class="t-blue">[tool] run_command({"command":"python bug.py"})</span><br>
+    <span class="t-yellow">[confirm] run_command: python bug.py (y/n)</span> <span class="t-white">y</span><br>
+    <span class="t-green">[result] {"exitCode":0,"output":"3\n","timedOut":false}</span><br><br>
+    <span class="t-white">[answer] Bug fixed. add(1, 2) now correctly returns 3.</span>
+  </div>
+</section>
+
+<section data-background-color="#0c0c0e">
+  <h2 style="color:var(--amber); font-size:2em;">⌨️</h2>
+  <h2>Switch to terminal — live run</h2>
+  <p style="font-size:0.6em; color:var(--gray);">Have Pocket Code ready with a buggy file</p>
+</section>
+
+<!-- ============================================ -->
+<!-- PART 2: WHAT JUST HAPPENED -->
+<!-- ============================================ -->
+<section class="part-slide">
+  <h2>Part 2</h2>
+  <h1>What Just Happened</h1>
+</section>
+
+<section>
+  <h2>The Agentic Loop</h2>
+  <br>
+  <div class="flow">
+    <div class="flow-box">User input</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box active">LLM decides</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Execute tool</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Return result</div>
+  </div>
+  <br>
+  <div class="flow">
+    <div class="flow-loop">↻ Repeat until the LLM is ready to answer</div>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    In its minimal form, the agent loop is a <span class="code-inline">while(true)</span>.<br>
+    LLM returns tool_calls → execute them, feed results back.<br>
+    LLM returns plain text → print the answer, loop ends.
+  </div>
+</section>
+
+<section>
+  <h2>Message Flow</h2>
+  <br>
+  <div class="terminal" style="font-size:0.58em;">
+    <span class="t-dim">// Round 1</span><br>
+    <span class="t-blue">→ { role: "user", content: "fix bug.py" }</span><br>
+    <span class="t-green">← { role: "assistant", tool_calls: [read_file("bug.py")] }</span><br>
+    <span class="t-blue">→ { role: "tool", content: "def add(a,b): return a-b" }</span><br><br>
+    <span class="t-dim">// Round 2</span><br>
+    <span class="t-green">← { role: "assistant", tool_calls: [edit_file(...)] }</span><br>
+    <span class="t-blue">→ { role: "tool", content: "OK" }</span><br><br>
+    <span class="t-dim">// Round 3</span><br>
+    <span class="t-green">← { role: "assistant", tool_calls: [run_command(...)] }</span><br>
+    <span class="t-blue">→ { role: "tool", content: '{"exitCode":0,...}' }</span><br><br>
+    <span class="t-dim">// Round 4 — no tool_calls, loop ends</span><br>
+    <span class="t-green">← { role: "assistant", content: "Bug fixed." }</span>
+  </div>
+</section>
+
+<section>
+  <h2>Chatbot vs Agent</h2>
+  <br>
+  <div class="compare-grid">
+    <div class="compare-col">
+      <h3 style="color:var(--gray);">Chatbot</h3>
+      <ul>
+        <li>User says → LLM replies</li>
+        <li>Single turn</li>
+        <li>Text generation only</li>
+        <li>No interaction with the outside</li>
+      </ul>
+    </div>
+    <div class="compare-col">
+      <h3 style="color:var(--amber);">Agent</h3>
+      <ul>
+        <li>User says → LLM <strong style="color:#e8e4de;">decides what to do</strong></li>
+        <li>Loops until done</li>
+        <li>Can call tools</li>
+        <li>Read files, write code, run commands</li>
+      </ul>
+    </div>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    At the API level, the difference is the <span class="code-inline">tools</span> parameter + a loop.<br>
+    Real products, of course, involve far more than that.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- PART 3: CODE WALKTHROUGH -->
+<!-- ============================================ -->
+<section class="part-slide">
+  <h2>Part 3</h2>
+  <h1>Layer by Layer</h1>
+  <p style="font-size:0.55em; color:var(--gray);">7 files, 920 lines, outside-in</p>
+</section>
+
+<!-- index.ts -->
+<section>
+  <h2>Entry — index.ts</h2>
+  <span class="tag tag-gray">140 lines</span>
+  <br><br>
+  <ul class="clean" style="font-size:0.75em;">
+    <li class="fragment step-in">Parse CLI args (<span class="code-inline">--model</span>, <span class="code-inline">--base-url</span>)</li>
+    <li class="fragment step-in">Load <span class="code-inline">POCKET.md</span> as system prompt</li>
+    <li class="fragment step-in">Initialize MCP servers</li>
+    <li class="fragment step-in">Start the REPL, handle slash commands</li>
+  </ul>
+  <br>
+  <div class="insight fragment step-in">
+    Analogy to Claude Code: <span class="code-inline">POCKET.md</span> is <span class="code-inline">CLAUDE.md</span>
+  </div>
+</section>
+
+<section>
+  <div class="file-label">index.ts — REPL</div>
+  <pre><code class="language-typescript" data-trim data-noescape>
+initReadline();
+
+while (true) {
+  const input = await question("> ");
+  const trimmed = input.trim();
+  if (!trimmed) continue;
+
+  // Slash commands: /model, /clear, /help, /exit
+  if (trimmed.startsWith("/")) {
+    handleSlashCommand(trimmed, agent, config);
+    continue;
+  }
+
+  // Regular input → hand off to the Agent
+  await agent.run(trimmed);
+}
+  </code></pre>
+</section>
+
+<!-- agent.ts -->
+<section>
+  <h2>Core — agent.ts</h2>
+  <span class="tag tag-yellow">123 lines</span>
+  <span class="tag tag-red">The key file</span>
+  <br><br>
+  <p style="font-size:0.8em;">The agent loop lives here</p>
+</section>
+
+<section>
+  <div class="file-label">agent.ts — the core loop (~30 lines)</div>
+  <pre><code class="language-typescript" data-trim data-noescape>
+async run(userInput: string) {
+  this.messages.push({ role: "user", content: userInput });
+
+  while (true) {
+    // 1. Call the LLM
+    const reply = await chatCompletion(
+      this.config, this.messages, this.tools
+    );
+
+    // 2. No tool_calls → final answer, done
+    if (!reply.tool_calls?.length) {
+      printAnswer(reply.content);
+      this.messages.push(reply);
+      return;
+    }
+
+    // 3. Has tool_calls → execute each one
+    printThinking(reply.content);  // [thinking]
+    this.messages.push(reply);
+
+    for (const tc of reply.tool_calls) {
+      const args = JSON.parse(tc.function.arguments);
+      printToolCall(name, args);        // [tool]
+
+      if (needsConfirmation.has(name)) {
+        if (!await confirm(name, args)) continue;  // [confirm]
+      }
+
+      const result = await executeTool(name, args);
+      printResult(result);              // [result]
+      this.messages.push({
+        role: "tool", tool_call_id: tc.id, content: result
+      });
+    }
+    // ↻ Back to while(true) — LLM sees tool results, decides next step
+  }
+}
+  </code></pre>
+</section>
+
+<section>
+  <h2>Why while(true)?</h2>
+  <br>
+  <div class="terminal" style="font-size:0.6em;">
+    <span class="t-dim">How many rounds does it take to fix a bug?</span><br><br>
+    <span class="t-white">Round 1:</span> <span class="t-blue">read_file</span> <span class="t-dim">→ read the code</span><br>
+    <span class="t-white">Round 2:</span> <span class="t-blue">edit_file</span> <span class="t-dim">→ apply the fix</span><br>
+    <span class="t-white">Round 3:</span> <span class="t-blue">run_command</span> <span class="t-dim">→ run tests</span><br>
+    <span class="t-white">Round 4:</span> <span class="t-red">tests fail</span> <span class="t-dim">→ error fed back to LLM</span><br>
+    <span class="t-white">Round 5:</span> <span class="t-blue">edit_file</span> <span class="t-dim">→ try again</span><br>
+    <span class="t-white">Round 6:</span> <span class="t-blue">run_command</span> <span class="t-dim">→ tests pass</span><br>
+    <span class="t-white">Round 7:</span> <span class="t-green">final answer</span><br>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    The LLM decides how many rounds it needs.<br>
+    You don't write if/else to orchestrate steps — the LLM is the orchestrator.
+  </div>
+</section>
+
+<!-- llm.ts -->
+<section>
+  <h2>LLM Wrapper — llm.ts</h2>
+  <span class="tag tag-gray">138 lines</span>
+  <br><br>
+  <ul class="clean" style="font-size:0.75em;">
+    <li class="fragment step-in">OpenAI-compatible format — one POST request</li>
+    <li class="fragment step-in">Send <span class="code-inline">messages</span> + <span class="code-inline">tools</span>, receive <span class="code-inline">message</span></li>
+    <li class="fragment step-in">Retry on 429, 120s timeout</li>
+    <li class="fragment step-in">Switch models by changing the base URL</li>
+  </ul>
+</section>
+
+<section>
+  <div class="file-label">llm.ts — the request body</div>
+  <pre><code class="language-json" data-trim data-noescape>
+{
+  "model": "deepseek-chat",
+  "messages": [
+    { "role": "system", "content": "You are a coding assistant..." },
+    { "role": "user", "content": "fix bug.py" },
+    { "role": "assistant", "tool_calls": [...] },
+    { "role": "tool", "content": "def add(a,b): return a-b" }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read file contents (max 2000 lines)",
+        "parameters": {
+          "type": "object",
+          "properties": { "path": { "type": "string" } },
+          "required": ["path"]
+        }
+      }
+    }
+  ]
+}
+  </code></pre>
+  <div class="insight fragment step-in">
+    This is <span class="code-inline">function calling</span>.<br>
+    The LLM doesn't execute tools — it <strong style="color:#e8e4de;">tells you</strong> what to call. You execute.
+  </div>
+</section>
+
+<!-- tools.ts -->
+<section>
+  <h2>Tool System — tools.ts</h2>
+  <span class="tag tag-gray">249 lines</span>
+  <span class="tag tag-green">Largest file</span>
+  <br><br>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5em; font-size:0.65em; max-width:85%; margin:0.8em auto 0; text-align:left;">
+    <div><span class="tag tag-green">Auto</span> read_file</div>
+    <div><span class="tag tag-red">Confirm</span> write_file</div>
+    <div><span class="tag tag-green">Auto</span> list_dir</div>
+    <div><span class="tag tag-red">Confirm</span> edit_file</div>
+    <div><span class="tag tag-green">Auto</span> search_files</div>
+    <div><span class="tag tag-red">Confirm</span> run_command</div>
+    <div><span class="tag tag-green">Auto</span> ask_user</div>
+    <div></div>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    Basic rule: read-only operations run automatically, writes and commands need human confirmation.<br>
+    Claude Code's permission model is more granular, but the starting point is the same.
+  </div>
+</section>
+
+<section>
+  <div class="file-label">tools.ts — definitions + execution</div>
+  <pre><code class="language-typescript" data-trim data-noescape>
+// 1. JSON Schema tells the LLM what tools are available
+export const toolDefs: ToolDef[] = [
+  {
+    type: "function",
+    function: {
+      name: "read_file",
+      description: "Read file contents (max 2000 lines)",
+      parameters: {
+        type: "object",
+        properties: { path: { type: "string" } },
+        required: ["path"],
+      },
+    },
+  },
+  // ... 6 more tools
+];
+
+// 2. A switch dispatches execution
+export async function executeTool(name, args) {
+  switch (name) {
+    case "read_file":  return readFileTool(args.path);
+    case "write_file": return writeFileTool(args.path, args.content);
+    case "run_command": return runCommandTool(args.command);
+    // ...
+  }
+}
+  </code></pre>
+</section>
+
+<section>
+  <h2>Output Truncation</h2>
+  <br>
+  <div class="terminal" style="font-size:0.6em;">
+    <span class="t-dim">// What if the LLM reads a 100K-line log file?</span><br>
+    <span class="t-blue">read_file</span> <span class="t-dim">→ max 2000 lines</span><br>
+    <span class="t-blue">search_files</span> <span class="t-dim">→ max 100 matches</span><br>
+    <span class="t-blue">run_command</span> <span class="t-dim">→ max 2000 lines + 30s timeout</span><br><br>
+    <span class="t-yellow">[truncated, showing first 2000 of 98473 lines]</span>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    No truncation → context overflow → agent loop breaks<br>
+    Every agent framework has to deal with this
+  </div>
+</section>
+
+<!-- permissions.ts -->
+<section>
+  <h2>Permissions — permissions.ts</h2>
+  <span class="tag tag-gray">20 lines</span>
+  <span class="tag tag-blue">Smallest file</span>
+  <br><br>
+  <pre><code class="language-typescript" data-trim data-noescape>
+export async function confirm(toolName, args) {
+  // write_file: demo/index.html (2847 chars)
+  // run_command: npm test
+  const summary = summarize(toolName, args);
+  const answer = await question(`[confirm] ${summary} (y/n) `);
+  return answer.trim().toLowerCase() === "y";
+}
+  </code></pre>
+  <br>
+  <div class="insight fragment step-in">
+    Human in the loop.<br>
+    The AI can't silently <span class="code-inline">rm -rf /</span>
+  </div>
+</section>
+
+<!-- mcp.ts -->
+<section>
+  <h2>MCP — mcp.ts</h2>
+  <span class="tag tag-gray">191 lines</span>
+  <br><br>
+  <p style="font-size:0.75em;">Model Context Protocol — connect external tools to the agent</p>
+</section>
+
+<section>
+  <h2>MCP Lifecycle</h2>
+  <br>
+  <div class="flow" style="font-size:0.6em;">
+    <div class="flow-box">initialize</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">initialized</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">tools/list</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box active">Running</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Shutdown</div>
+  </div>
+  <br>
+  <pre><code class="language-json" data-trim data-noescape>
+// pocket.json — declare MCP servers
+{
+  "mcpServers": {
+    "weather": {
+      "command": "node",
+      "args": ["./my-weather-server.js"]
+    }
+  }
+}
+  </code></pre>
+  <br>
+  <div class="insight fragment step-in">
+    MCP tools and built-in tools are registered together.<br>
+    The LLM doesn't care where a tool comes from — it only sees the JSON Schema.
+  </div>
+</section>
+
+<!-- ui.ts -->
+<section>
+  <h2>Terminal UI — ui.ts</h2>
+  <span class="tag tag-gray">59 lines</span>
+  <br><br>
+  <div class="terminal" style="font-size:0.65em;">
+    <span class="t-gray">[thinking] Let me read this file...</span><br>
+    <span class="t-blue">[tool] read_file({"path":"bug.py"})</span><br>
+    <span class="t-yellow">[confirm] edit_file: bug.py (replace 5 chars) (y/n)</span><br>
+    <span class="t-green">[result] OK</span><br>
+    <span class="t-red">[error] LLM API error 429</span><br>
+    <span class="t-white">[answer] Bug fixed.</span><br><br>
+    <span class="t-dim">⠹ Thinking...</span>
+  </div>
+  <br>
+  <div class="insight fragment step-in">
+    Each color = one phase of the agent loop<br>
+    This is how Pocket Code makes every step visible
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- PART 4: COMPARISON -->
+<!-- ============================================ -->
+<section class="part-slide">
+  <h2>Part 4</h2>
+  <h1>Comparison & Reflection</h1>
+</section>
+
+<section>
+  <h2>Pocket Code vs Production</h2>
+  <br>
+  <div class="compare-grid">
+    <div class="compare-col">
+      <h3 style="color:var(--amber);">What Pocket Code has</h3>
+      <ul>
+        <li>Agentic loop</li>
+        <li>7 built-in tools</li>
+        <li>Permission confirmation</li>
+        <li>MCP support</li>
+        <li>Multi-model switching</li>
+        <li>Project instruction file</li>
+      </ul>
+    </div>
+    <div class="compare-col">
+      <h3 style="color:var(--gray);">What Claude Code adds</h3>
+      <ul>
+        <li>Streaming output</li>
+        <li>Context compression / overflow</li>
+        <li>Sandbox isolation</li>
+        <li>Parallel sub-agents</li>
+        <li>File rollback / checkpoints</li>
+        <li>Memory system</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Where Are the Gaps?</h2>
+  <br>
+  <ul class="clean" style="font-size:0.75em;">
+    <li class="fragment step-in"><strong style="color:var(--amber);">Context management</strong> — conversation too long? Compression, summarization, sliding window</li>
+    <li class="fragment step-in"><strong style="color:var(--amber);">Streaming</strong> — users don't want to stare at a blank screen for 30 seconds</li>
+    <li class="fragment step-in"><strong style="color:var(--amber);">Security</strong> — y/n isn't enough: sandbox, path restrictions, command allowlists</li>
+    <li class="fragment step-in"><strong style="color:var(--amber);">Fault tolerance</strong> — broke a file? Checkpoints + rollback</li>
+    <li class="fragment step-in"><strong style="color:var(--amber);">Parallelism</strong> — multiple sub-agents reading files and running tasks concurrently</li>
+  </ul>
+  <br>
+  <div class="fragment step-in" style="font-size:0.65em; color:var(--gray); margin-top:1em;">
+    These gaps span both engineering effort and design philosophy.
+  </div>
+</section>
+
+<section>
+  <h2>Takeaway</h2>
+  <br>
+  <div class="big-number">3</div>
+  <p style="font-size:0.85em; color:#e8e4de; margin-top:0.3em;">core concepts</p>
+  <br>
+  <div style="font-size:0.75em; text-align:left; max-width:70%; margin:0 auto;">
+    <p class="fragment step-in"><strong style="color:var(--amber);">1. LLM as decision maker</strong> — it chooses which tool to call, not your hardcoded logic</p>
+    <p class="fragment step-in"><strong style="color:var(--green);">2. Tools as capabilities</strong> — JSON Schema defines what's available, results feed back to the LLM</p>
+    <p class="fragment step-in"><strong style="color:var(--blue);">3. The loop as the backbone</strong> — <span class="code-inline">while(true)</span> lets the agent decide when it's done</p>
+  </div>
+</section>
+
+<section>
+  <h2>In One Line</h2>
+  <br><br>
+  <p style="font-size:1.3em; color:#e8e4de; font-weight:500; line-height:1.5;">
+    Agent = LLM + Tools + Loop
+  </p>
+  <br>
+  <p style="font-size:0.65em; color:var(--gray);">This is the minimal form. Production builds a lot more on top.</p>
+</section>
+
+<section class="qa-slide">
+  <h1>Q&A</h1>
+  <div class="line-accent"></div>
+  <br>
+  <p style="font-size:0.6em; color:var(--gray);">
+    github.com/polunzh/pocket-code
+  </p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: true,
+  controls: true,
+  progress: true,
+  center: true,
+  transition: 'none',
+  plugins: [RevealHighlight],
+});
+</script>
+</body>
+</html>
