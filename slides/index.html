@@ -288,10 +288,152 @@
   font-size: 3.5em;
   color: var(--amber);
 }
+
+/* ── Persistent footer link ── */
+.reveal .footer-link {
+  position: fixed;
+  bottom: 16px;
+  right: 24px;
+  font-family: var(--r-code-font);
+  font-size: 11px;
+  color: #2a2724;
+  text-decoration: none;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.reveal .footer-link:hover {
+  color: var(--gray);
+}
+
+/* ── Architecture diagram ── */
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--r-code-font);
+  font-size: 0.42em;
+  gap: 0;
+  margin-top: 0.5em;
+}
+.arch-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.arch-node {
+  padding: 0.5em 1.2em;
+  border-radius: 5px;
+  border: 1px solid #292524;
+  background: #1c1917;
+  color: #e8e4de;
+  text-align: center;
+  line-height: 1.4;
+  position: relative;
+}
+.arch-sub {
+  display: block;
+  font-size: 0.8em;
+  color: var(--gray);
+  margin-top: 0.15em;
+}
+.arch-user { border-color: var(--amber); color: var(--amber); }
+.arch-llm { border-color: var(--blue); color: var(--blue); background: #12192a; }
+.arch-messages { border-color: var(--dim); color: var(--gray); }
+.arch-confirm { border-color: var(--yellow); color: var(--yellow); background: #1f1c10; }
+.arch-tool { border-color: var(--blue); color: var(--blue); background: #12192a; }
+.arch-result { border-color: var(--green); color: var(--green); background: #111f14; }
+.arch-answer { border-color: #e8e4de; color: #e8e4de; background: #1c1917; }
+
+.arch-arrow-down {
+  color: var(--dim);
+  font-size: 1.3em;
+  line-height: 1.2;
+}
+.arch-arrow-right {
+  color: var(--dim);
+  font-size: 1.3em;
+  padding: 0 0.3em;
+}
+.arch-arrow-loop {
+  color: var(--green);
+  font-size: 1.6em;
+  line-height: 1;
+  margin-top: 0.1em;
+}
+
+/* while(true) container */
+.arch-loop {
+  border: 1.5px dashed #44403c;
+  border-radius: 8px;
+  padding: 0.8em 1.5em 1em;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  margin-top: -0.1em;
+}
+.arch-loop-label {
+  position: absolute;
+  top: -0.85em;
+  left: 1em;
+  background: var(--r-background-color);
+  padding: 0 0.5em;
+  color: var(--amber);
+  font-size: 0.95em;
+  font-weight: 500;
+}
+
+.arch-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* branch diamond */
+.arch-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.arch-diamond {
+  background: #1c1917;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  padding: 0.4em 1em;
+  transform: rotate(0deg);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  width: 9em;
+  height: 4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+/* two paths */
+.arch-branch-paths {
+  display: flex;
+  gap: 3em;
+  margin-top: 0.2em;
+}
+.arch-path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+}
+.arch-path-label {
+  font-weight: 700;
+  font-size: 0.95em;
+}
+.arch-yes-label { color: var(--green); }
+.arch-no-label { color: var(--gray); }
 </style>
 </head>
 <body>
 <div class="reveal">
+<a class="footer-link" href="https://github.com/polunzh/pocket-code" target="_blank">github.com/polunzh/pocket-code</a>
 <div class="slides">
 
 <!-- ============================================ -->
@@ -301,8 +443,6 @@
   <h1>Inside Agentic Coding</h1>
   <div class="line-accent"></div>
   <p class="title-sub">Reproducing Claude Code's core flow in 900 lines</p>
-  <br>
-  <p style="font-size:0.5em; color:var(--dim);">github.com/polunzh/pocket-code</p>
 </section>
 
 <section>
@@ -374,25 +514,47 @@
 
 <section>
   <h2>The Agentic Loop</h2>
-  <br>
-  <div class="flow">
-    <div class="flow-box">User input</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-box active">LLM decides</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-box">Execute tool</div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-box">Return result</div>
-  </div>
-  <br>
-  <div class="flow">
-    <div class="flow-loop">↻ Repeat until the LLM is ready to answer</div>
-  </div>
-  <br>
-  <div class="insight fragment step-in">
-    In its minimal form, the agent loop is a <span class="code-inline">while(true)</span>.<br>
-    LLM returns tool_calls → execute them, feed results back.<br>
-    LLM returns plain text → print the answer, loop ends.
+  <div class="arch-diagram">
+    <!-- user input enters the loop -->
+    <div class="arch-entry">
+      <div class="arch-node arch-user">User Input</div>
+      <div class="arch-arrow-down">↓</div>
+    </div>
+
+    <!-- the while(true) box -->
+    <div class="arch-loop">
+      <div class="arch-loop-label">while (true)</div>
+
+      <!-- messages → LLM -->
+      <div class="arch-row">
+        <div class="arch-node arch-messages">messages[]</div>
+        <div class="arch-arrow-right">→</div>
+        <div class="arch-node arch-llm">LLM API<span class="arch-sub">chatCompletion()</span></div>
+      </div>
+
+      <!-- branch -->
+      <div class="arch-branch">
+        <div class="arch-arrow-down">↓</div>
+        <div class="arch-diamond">tool_calls?</div>
+        <div class="arch-branch-paths">
+          <div class="arch-path arch-path-yes">
+            <div class="arch-path-label arch-yes-label">Yes</div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-node arch-confirm">Confirm?<span class="arch-sub">permissions.ts</span></div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-node arch-tool">Execute Tool<span class="arch-sub">tools.ts</span></div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-node arch-result">Result → messages[]</div>
+            <div class="arch-arrow-loop">↻</div>
+          </div>
+          <div class="arch-path arch-path-no">
+            <div class="arch-path-label arch-no-label">No</div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-node arch-answer">Print Answer<span class="arch-sub">return</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -846,10 +1008,6 @@ export async function confirm(toolName, args) {
 <section class="qa-slide">
   <h1>Q&A</h1>
   <div class="line-accent"></div>
-  <br>
-  <p style="font-size:0.6em; color:var(--gray);">
-    github.com/polunzh/pocket-code
-  </p>
 </section>
 
 </div>
