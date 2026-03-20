@@ -1,0 +1,21 @@
+{
+  "name": "pocket-code",
+  "version": "0.1.0",
+  "description": "Educational agentic coding CLI",
+  "type": "module",
+  "bin": {
+    "pocket-code": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10"
+  }
+}
