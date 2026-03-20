@@ -8,8 +8,29 @@
 
 ## 工作原理
 
-```
-用户输入 → LLM 决定调用哪些工具 → 执行工具 → 将结果返回给 LLM → 重复
+```mermaid
+flowchart TD
+    A["用户输入"] --> B["messages[]"]
+
+    subgraph LOOP["while (true)"]
+        B --> C["LLM API\nchatCompletion()"]
+        C --> D{"有 tool_calls?"}
+        D -- 有 --> E["用户确认\npermissions.ts"]
+        E --> F["执行工具\ntools.ts"]
+        F --> G["结果 → messages[]"]
+        G --> C
+        D -- 没有 --> H["输出回答\nreturn"]
+    end
+
+    style A fill:#1c1917,stroke:#d4a574,color:#d4a574
+    style C fill:#12192a,stroke:#6cb6ff,color:#6cb6ff
+    style D fill:#1c1917,stroke:#d4a574,color:#d4a574
+    style E fill:#1f1c10,stroke:#e0c46c,color:#e0c46c
+    style F fill:#12192a,stroke:#6cb6ff,color:#6cb6ff
+    style G fill:#111f14,stroke:#7ec699,color:#7ec699
+    style H fill:#1c1917,stroke:#e8e4de,color:#e8e4de
+    style B fill:#1c1917,stroke:#44403c,color:#6e6a62
+    style LOOP fill:none,stroke:#44403c,stroke-dasharray:5 5,color:#d4a574
 ```
 
 Agent 在一个循环中运行：把你的消息发给 LLM，LLM 决定调用哪些工具（读文件、执行命令等），执行结果被送回，循环持续直到 LLM 有足够信息来回答。

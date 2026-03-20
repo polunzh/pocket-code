@@ -8,8 +8,29 @@ An educational agentic coding CLI that demonstrates how AI agent tools like [Cla
 
 ## How It Works
 
-```
-User input → LLM decides tool calls → execute tools → feed results back → repeat
+```mermaid
+flowchart TD
+    A["User Input"] --> B["messages[]"]
+
+    subgraph LOOP["while (true)"]
+        B --> C["LLM API\nchatCompletion()"]
+        C --> D{"tool_calls?"}
+        D -- Yes --> E["Confirm?\npermissions.ts"]
+        E --> F["Execute Tool\ntools.ts"]
+        F --> G["Result → messages[]"]
+        G --> C
+        D -- No --> H["Print Answer\nreturn"]
+    end
+
+    style A fill:#1c1917,stroke:#d4a574,color:#d4a574
+    style C fill:#12192a,stroke:#6cb6ff,color:#6cb6ff
+    style D fill:#1c1917,stroke:#d4a574,color:#d4a574
+    style E fill:#1f1c10,stroke:#e0c46c,color:#e0c46c
+    style F fill:#12192a,stroke:#6cb6ff,color:#6cb6ff
+    style G fill:#111f14,stroke:#7ec699,color:#7ec699
+    style H fill:#1c1917,stroke:#e8e4de,color:#e8e4de
+    style B fill:#1c1917,stroke:#44403c,color:#6e6a62
+    style LOOP fill:none,stroke:#44403c,stroke-dasharray:5 5,color:#d4a574
 ```
 
 The agent runs in a loop: it sends your message to the LLM, the LLM decides which tools to call (read files, run commands, etc.), the results are fed back, and the loop continues until the LLM has enough information to answer.
